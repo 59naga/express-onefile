@@ -9,8 +9,6 @@
   ],
 
   "scripts": {
-    "postinstall": "cd test && bower install",
-
     "start": "jasminetea --watch",
     "test": "jasminetea --lint --cover --report",
 

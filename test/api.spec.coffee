@@ -3,17 +3,21 @@ onefile= require '../src'
 express= require 'express'
 supertest= require 'supertest'
 
+spawn= (require 'child_process').spawn
+
 # Environment
-jasmine.DEFAULT_TIMEOUT_INTERVAL= 5000
+jasmine.DEFAULT_TIMEOUT_INTERVAL= 10000
 
 # Specs
 describe 'expressOnefile',->
   server= null
   beforeEach (done)->
-    app= express()
-    app.use onefile {cwd:__dirname}
+    spawn 'bower',['install'],{cwd:__dirname}
+    .on 'close',->
+      app= express()
+      app.use onefile {cwd:__dirname}
 
-    server= app.listen done
+      server= app.listen done
 
   afterEach (done)->
     server.close done
