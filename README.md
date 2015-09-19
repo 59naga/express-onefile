@@ -18,7 +18,7 @@ bower init
 bower install jquery --save
 # ...
 
-PORT=59798 node app.js
+node app.js
 # server running at http://localhost:59798
 ```
 
@@ -28,6 +28,7 @@ PORT=59798 node app.js
 var express= require('express');
 var onefile= require('express-onefile');
 
+var port= 59798;
 var options= {
   cwd: process.cwd(),
   filename: 'pkgs',
@@ -35,16 +36,19 @@ var options= {
 
 var app= express();
 app.use(onefile(options));
-app.listen(process.env.PORT,function(){
-  console.log('server running at http://localhost:%s',process.env.PORT);
+app.listen(port,function(){
+  console.log('server running at http://localhost:%s',port);
 });
 ```
 
-Can you access `http://localhost:59798/pkgs.js` and `http://localhost:59798/pkgs.min.js`
+Can you access:
+* `http://localhost:59798/pkgs.js`
+* `http://localhost:59798/pkgs.min.js`
 
 # Related projects
-* __express-onefile__
 * [onefile](https://github.com/59naga/onefile/)
+* __express-onefile__
+* [difficult-http-server](https://github.com/59naga/difficult-http-server)
 
 License
 ---
