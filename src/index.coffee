@@ -9,35 +9,57 @@ expressOnefile= ({cwd,filename}={})->
   cwd?= process.cwd()
   filename?= 'pkgs'
 
-  cacheDevelop= null
+  cache= null
   middleware.get '/'+filename+'.js',(req,res)->
     res.set 'Content-type','application/javascript'
 
-    if cacheDevelop
-      res.send cacheDevelop
+    if cache
+      res.send cache
 
     else
       onefile {cwd}
       .on 'data',(file)->
-        cacheDevelop= file.contents
+        cache= file.contents
 
       .on 'end',->
-        res.send cacheDevelop
+        res.send cache
 
-  cacheProduction= null
+  cacheMin= null
+  cacheMap= null
   middleware.get '/'+filename+'.min.js',(req,res)->
     res.set 'Content-type','application/javascript'
 
-    if cacheProduction
-      res.send cacheProduction
+    if cacheMin
+      res.send cacheMin
       
     else
-      onefile {cwd,mangle:yes}
-      .on 'data',(file)->
-        cacheProduction= file.contents
+      minify ->
+        res.send cacheMin
 
-      .on 'end',->
-        res.send cacheProduction
+  middleware.get '/'+filename+'.min.js.map',(req,res)->
+    res.set 'Content-type','application/json'
+
+    if cacheMap
+      res.send cacheMap
+      
+    else
+      minify ->
+        res.send cacheMap
+
+  minify= (callback)->
+    options= {
+      cwd
+      outputName: filename+'.min'
+      mangle: yes
+      detachSourcemap: yes
+    }
+
+    onefile options
+    .on 'data',(file)->
+      cacheMin= file.contents if file.path.slice(-3) is '.js'
+      cacheMap= file.contents if file.path.slice(-4) is '.map'
+
+    .on 'end',callback
 
   middleware
 

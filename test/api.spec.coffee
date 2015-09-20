@@ -3,7 +3,7 @@ onefile= require '../src'
 express= require 'express'
 supertest= require 'supertest'
 
-spawn= (require 'child_process').spawn
+childProcess= require 'child_process'
 
 # Environment
 jasmine.DEFAULT_TIMEOUT_INTERVAL= 10000
@@ -12,12 +12,12 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL= 10000
 describe 'expressOnefile',->
   server= null
   beforeEach (done)->
-    spawn 'bower',['install'],{cwd:__dirname}
-    .on 'close',->
-      app= express()
-      app.use onefile {cwd:__dirname}
+    childProcess.spawnSync 'bower',['install'],{cwd:__dirname}
 
-      server= app.listen done
+    app= express()
+    app.use onefile {cwd:__dirname}
+
+    server= app.listen done
 
   afterEach (done)->
     server.close done
@@ -27,7 +27,7 @@ describe 'expressOnefile',->
     .get '/pkgs.js'
     .expect 200
     .expect 'Content-type','application/javascript'
-    .expect /==$/
+    .expect /# sourceMappingURL=data:application\/json;base64/
     .end (error,response)->
       if error then done.fail error else done()
 
@@ -36,6 +36,17 @@ describe 'expressOnefile',->
     .get '/pkgs.min.js'
     .expect 200
     .expect 'Content-type','application/javascript'
-    .expect /;$/
+    .expect /^!function\(e,t\){/
+    .expect /# sourceMappingURL=pkgs.min.js.map$/
+    .end (error,response)->
+      if error then done.fail error else done()
+
+  it 'GET pkgs.min.js.map',(done)->
+    supertest server
+    .get '/pkgs.min.js.map'
+    .expect 200
+    .expect 'Content-type','application/json'
+    .expect /^{"version":3,/
+    .expect /}$/
     .end (error,response)->
       if error then done.fail error else done()
