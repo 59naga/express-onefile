@@ -1,6 +1,6 @@
 # ExpressOnefile [![NPM version][npm-image]][npm] [![Build Status][travis-image]][travis] [![Coverage Status][coveralls-image]][coveralls]
 
-> compressed packages middleware
+> combined packages middleware
 
 ## Installation
 
