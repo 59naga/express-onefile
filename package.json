@@ -1,6 +1,6 @@
 {
   "name": "express-onefile",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "compressed packages middleware",
 
   "files": [
@@ -24,7 +24,7 @@
 
   "dependencies": {
     "express": "^4.13.3",
-    "onefile": "^0.3.1"
+    "onefile": "^0.3.2"
   },
   "devDependencies": {
     "ghooks": "^0.3.2",
