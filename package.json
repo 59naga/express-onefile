@@ -1,11 +1,11 @@
 {
   "name": "express-onefile",
-  "version": "0.0.2",
-  "description": "compressed packages middleware",
+  "version": "0.0.3",
+  "description": "bower_components compressor middleware",
 
+  "main": "lib",
   "files": [
-    "lib",
-    "index.js"
+    "lib"
   ],
 
   "scripts": {
@@ -23,6 +23,7 @@
   },
 
   "dependencies": {
+    "bluebird": "^2.10.2",
     "express": "^4.13.3",
     "onefile": "^0.3.2"
   },

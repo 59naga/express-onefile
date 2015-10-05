@@ -1,6 +1,40 @@
 # Dependencies
+Promise= require 'bluebird'
+
 express= require 'express'
 onefile= require 'onefile'
+
+# Private
+onefilePlain= ({cwd}={})->
+  script= null
+
+  new Promise (resolve)->
+    onefile {cwd}
+    .on 'data',(file)->
+      script= file.contents
+
+    .on 'end',->
+      resolve [script]
+
+onefileMinify= ({cwd,filename}={})->
+  options= {
+    cwd
+    outputName: filename+'.min'
+    mangle: yes
+    detachSourcemap: yes
+  }
+
+  new Promise (resolve)->
+    min= null
+    map= null
+
+    onefile options
+    .on 'data',(file)->
+      min= file.contents if file.path.slice(-3) is '.js'
+      map= file.contents if file.path.slice(-4) is '.map'
+
+    .on 'end',->
+      resolve [min,map]
 
 # Public
 expressOnefile= ({cwd,filename}={})->
@@ -9,51 +43,33 @@ expressOnefile= ({cwd,filename}={})->
   cwd?= process.cwd()
   filename?= 'pkgs'
 
-  cache= null
-  cacheMin= null
-  cacheMap= null
-
-  onefileMinify= (callback)->
-    options= {
-      cwd
-      outputName: filename+'.min'
-      mangle: yes
-      detachSourcemap: yes
-    }
-
-    onefile options
-    .on 'data',(file)->
-      cacheMin= file.contents if file.path.slice(-3) is '.js'
-      cacheMap= file.contents if file.path.slice(-4) is '.map'
-
-    .on 'end',callback
-
+  task= null
   middleware.get '/'+filename+'.js',(req,res)->
     res.set 'Content-type','application/javascript'
 
-    return res.send cache if cache
+    task?= onefilePlain {cwd}
 
-    onefile {cwd}
-    .on 'data',(file)->
-      cache= file.contents
+    task
+    .spread (script)->
+      res.send script
 
-    .on 'end',->
-      res.send cache
-
+  taskMinify= null
   middleware.get '/'+filename+'.min.js',(req,res)->
     res.set 'Content-type','application/javascript'
+    
+    taskMinify?= onefileMinify {cwd,filename}
 
-    return res.send cacheMin if cacheMin
-      
-    onefileMinify ->
+    taskMinify
+    .spread (cacheMin,cacheMap)->
       res.send cacheMin
 
   middleware.get '/'+filename+'.min.js.map',(req,res)->
     res.set 'Content-type','application/json'
 
-    return res.send cacheMap if cacheMap
-      
-    onefileMinify ->
+    taskMinify?= onefileMinify {cwd,filename}
+
+    taskMinify
+    .spread (cacheMin,cacheMap)->
       res.send cacheMap
 
   middleware

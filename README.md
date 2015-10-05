@@ -1,6 +1,6 @@
 # ExpressOnefile [![NPM version][npm-image]][npm] [![Build Status][travis-image]][travis] [![Coverage Status][coveralls-image]][coveralls]
 
-> combined packages middleware
+> Express4 middleware of bower_components compressor
 
 ## Installation
 
