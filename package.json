@@ -13,8 +13,7 @@
     "test": "jasminetea --lint --cover --report",
 
     "prepublish": "node -e \"if(process.env.TRAVIS){}else{process.exit(1)}\" && npm run compile || echo skip prepublish",
-    "compile": "coffee --bare --compile index.coffee",
-    "postcompile": "coffee --output lib --bare --compile src"
+    "compile": "coffee --output lib --bare --compile src"
   },
   "config": {
     "ghooks": {
