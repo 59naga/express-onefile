@@ -1,6 +1,6 @@
 {
   "name": "express-onefile",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "bower_components compressor middleware",
 
   "main": "lib",
@@ -29,7 +29,7 @@
   "devDependencies": {
     "ghooks": "^0.3.2",
     "jasminetea": "^0.2.1",
-    "supertest": "^1.1.0"
+    "request": "^2.64.0"
   },
   
   "keywords": [

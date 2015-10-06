@@ -3,12 +3,15 @@ Promise= require 'bluebird'
 
 expressOnefile= require '../src'
 express= require 'express'
-supertest= require 'supertest'
+request= require 'request'
 
 childProcess= require 'child_process'
+fs= require 'fs'
 
 # Environment
 jasmine.DEFAULT_TIMEOUT_INTERVAL= 5000
+process.env.PORT?= 59798
+url= 'http://localhost:59798'
 concurrency= 100
 
 # Specs
@@ -18,56 +21,74 @@ describe 'expressOnefile',->
     childProcess.spawnSync 'bower',['install'],{cwd:__dirname}
 
     app= express()
-    app.use expressOnefile {cwd:__dirname}
+    app.use express.static __dirname
+    app.use expressOnefile {cache:yes,cwd:__dirname}
 
-    server= app.listen done
+    server= app.listen process.env.PORT,done
 
   afterAll (done)->
     server.close done
 
-  it 'GET pkgs.js(concurrency 100)',(done)->
+    try
+      fs.unlinkSync __dirname+'/pkgs.js'
+      fs.unlinkSync __dirname+'/pkgs.min.js'
+      fs.unlinkSync __dirname+'/pkgs.min.js.map'
+
+  it 'GET /pkgs.js(concurrency 100)',(done)->
     promises=
       for i in [0...concurrency]
         new Promise (resolve,reject)->
-          supertest server
-          .get '/pkgs.js'
-          .expect 200
-          .expect 'Content-type','application/javascript'
-          .expect /# sourceMappingURL=data:application\/json;base64/
-          .end (error,response)->
-            unless error then resolve() else reject error
+          request url+'/pkgs.js'
+          ,(error,response)->
+            return reject error if error
+
+            expect(response.statusCode).toBe 200
+            expect(response.headers['content-type']).toBe 'application/javascript'
+            expect(response.body).toMatch /# sourceMappingURL=data:application\/json;base64/
+
+            resolve()
 
     Promise.all promises
-    .then done
+    .then ->
+      expect(fs.existsSync __dirname+'/pkgs.js').toBe true
+      done()
 
-  it 'GET pkgs.min.js(concurrency 100)',(done)->
+  it 'GET /pkgs.min.js(concurrency 100)',(done)->
     promises=
       for i in [0...concurrency]
         new Promise (resolve,reject)->
-          supertest server
-          .get '/pkgs.min.js'
-          .expect 200
-          .expect 'Content-type','application/javascript'
-          .expect /^!function\(e,t\){/
-          .expect /# sourceMappingURL=pkgs.min.js.map$/
-          .end (error,response)->
-            unless error then resolve() else reject error
+          request url+'/pkgs.min.js'
+          ,(error,response)->
+            return reject error if error
+
+            expect(response.statusCode).toBe 200
+            expect(response.headers['content-type']).toBe 'application/javascript'
+            expect(response.body).toMatch /^!function\(e,t\){/
+            expect(response.body).toMatch /# sourceMappingURL=pkgs.min.js.map$/
+
+            resolve()
 
     Promise.all promises
-    .then done
+    .then ->
+      expect(fs.existsSync __dirname+'/pkgs.min.js').toBe true
+      done()
 
-  it 'GET pkgs.min.js.map(concurrency 100)',(done)->
+  it 'GET /pkgs.min.js.map(concurrency 100)',(done)->
     promises=
       for i in [0...concurrency]
         new Promise (resolve,reject)->
-          supertest server
-          .get '/pkgs.min.js.map'
-          .expect 200
-          .expect 'Content-type','application/json'
-          .expect /^{"version":3,/
-          .expect /}$/
-          .end (error,response)->
-            unless error then resolve() else reject error
+          request url+'/pkgs.min.js.map'
+          ,(error,response)->
+            return reject error if error
+
+            expect(response.statusCode).toBe 200
+            expect(response.headers['content-type']).toBe 'application/json'
+            expect(response.body).toMatch /^{"version":3,/
+            expect(response.body).toMatch /}$/
+
+            resolve()
 
     Promise.all promises
-    .then done
+    .then ->
+      expect(fs.existsSync __dirname+'/pkgs.min.js.map').toBe true
+      done()

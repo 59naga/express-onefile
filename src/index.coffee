@@ -4,8 +4,11 @@ Promise= require 'bluebird'
 express= require 'express'
 onefile= require 'onefile'
 
+fs= require 'fs'
+path= require 'path'
+
 # Private
-onefilePlain= ({cwd}={})->
+onefilePlain= ({cache,cwd}={})->
   script= null
 
   new Promise (resolve)->
@@ -13,10 +16,13 @@ onefilePlain= ({cwd}={})->
     .on 'data',(file)->
       script= file.contents
 
+      if cache
+        fs.writeFileSync path.join(cwd,file.path),file.contents
+
     .on 'end',->
       resolve [script]
 
-onefileMinify= ({cwd,filename}={})->
+onefileMinify= ({cache,cwd,filename}={})->
   options= {
     cwd
     outputName: filename+'.min'
@@ -33,13 +39,17 @@ onefileMinify= ({cwd,filename}={})->
       min= file.contents if file.path.slice(-3) is '.js'
       map= file.contents if file.path.slice(-4) is '.map'
 
+      if cache
+        fs.writeFileSync path.join(cwd,file.path),file.contents
+
     .on 'end',->
       resolve [min,map]
 
 # Public
-expressOnefile= ({cwd,filename}={})->
+expressOnefile= ({cache,cwd,filename}={})->
   middleware= express.Router()
 
+  cache?= process.env.NODE_ENV is 'production'
   cwd?= process.cwd()
   filename?= 'pkgs'
 
@@ -47,7 +57,7 @@ expressOnefile= ({cwd,filename}={})->
   middleware.get '/'+filename+'.js',(req,res)->
     res.set 'Content-type','application/javascript'
 
-    task?= onefilePlain {cwd}
+    task?= onefilePlain {cache,cwd}
 
     task
     .spread (script)->
@@ -57,7 +67,7 @@ expressOnefile= ({cwd,filename}={})->
   middleware.get '/'+filename+'.min.js',(req,res)->
     res.set 'Content-type','application/javascript'
     
-    taskMinify?= onefileMinify {cwd,filename}
+    taskMinify?= onefileMinify {cache,cwd,filename}
 
     taskMinify
     .spread (cacheMin,cacheMap)->
@@ -66,7 +76,7 @@ expressOnefile= ({cwd,filename}={})->
   middleware.get '/'+filename+'.min.js.map',(req,res)->
     res.set 'Content-type','application/json'
 
-    taskMinify?= onefileMinify {cwd,filename}
+    taskMinify?= onefileMinify {cache,cwd,filename}
 
     taskMinify
     .spread (cacheMin,cacheMap)->
